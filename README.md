@@ -11,3 +11,5 @@ Creo ramas por lineas de investigación:
   1.2 - Chat de la uni de valencia, con base de datos postgre
   
   1.3 - Juego multiplatyer ( https://circumeo.io/blog/entry/django-websockets/ )
+
+  1.4 - Juego controlado por teclado
