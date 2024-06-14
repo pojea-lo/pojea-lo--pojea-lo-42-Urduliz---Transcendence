@@ -19,42 +19,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const winningScore = 5;
     let showingWinScreen = false;
 
-//socket**********************************************************************
-
-    const socket = new WebSocket('ws://' + window.location.host + '/ws/game/');
-
-    socket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        ballX = data.ballX;
-        ballY = data.ballY;
-        player1Y = data.player1Y;
-        player2Y = data.player2Y;
-        player1Score = data.player1Score;
-        player2Score = data.player2Score;
-    };
-
-    socket.onopen = function(e) {
-        console.log('WebSocket connection established.');
-    };
-
-    socket.onclose = function(e) {
-        console.log('WebSocket connection closed.');
-    };
-
-    function sendGameState() {
-        socket.send(JSON.stringify({
-            'message': 'update',
-            'ballX': ballX,
-            'ballY': ballY,
-            'player1Y': player1Y,
-            'player2Y': player2Y,
-            'player1Score': player1Score,
-            'player2Score': player2Score
-        }));
-    }
-
-//socket**********************************************************************
-
     function drawRect(x, y, width, height, color) {
         context.fillStyle = color;
         context.fillRect(x, y, width, height);

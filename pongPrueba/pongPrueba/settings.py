@@ -72,6 +72,13 @@ TEMPLATES = [
 
 ASGI_APPLICATION = "pongPrueba.asgi.application"
 
+# Configuración de canales
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
 WSGI_APPLICATION = 'pongPrueba.wsgi.application'
 
 
@@ -134,10 +141,3 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Configuración de canales
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels.layers.InMemoryChannelLayer",
-#     },
-# }
