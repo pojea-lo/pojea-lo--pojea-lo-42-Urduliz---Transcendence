@@ -17,8 +17,8 @@ class PongConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         # Initialize game state
-        # self.game_state = self.get_initial_game_state()
-        # await self.send_game_state()
+        self.game_state = self.get_initial_game_state()
+        await self.send_game_state()
 
     async def disconnect(self, close_code):
         # Leave room group

@@ -1,4 +1,3 @@
-<!-- templates/game/game_room.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,8 +24,19 @@
 
         const paddleWidth = 10, paddleHeight = 100;
         const ballSize = 10;
+        let player1Up = false, player1Down = false;
+        let player2Up = false, player2Down = false;
+        let showingWinScreen = false;
 
-        let player = 'player1';  // or 'player2'
+        let ballX = 400;
+        let ballY = 200;
+        let ballSpeedX = 5;
+        let ballSpeedY = 4;
+        let player1Y = 150;
+        let player2Y = 150;
+        let player1Score = 0;
+        let player2Score = 0;
+
         socket.onopen = function(e) {
             console.log("Connection established!");
         };
@@ -101,19 +111,95 @@
             }
         }
 
+        function drawEverything() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawRect(0, 0, canvas.width, canvas.height, 'black');
+            drawNet();
+            drawRect(0, player1Y, paddleWidth, paddleHeight, 'white');
+            drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, 'white');
+            drawCircle(ballX, ballY, ballSize, 'white');
+            
+            if (!showingWinScreen) {
+                drawScore(player1Score, player2Score);
+            } else {
+                drawWinScreen(player1Score > player2Score ? "Player 1" : "Player 2");
+            }
+        }
+
+        function moveEverything() {
+            if (showingWinScreen) {
+                return;
+            }
+
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            if (ballY <= 0 || ballY >= canvas.height) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            if (ballX <= 0) {
+                if (ballY > player1Y && ballY < player1Y + paddleHeight) {
+                    ballSpeedX = -ballSpeedX;
+                } else {
+                    player2Score++;
+                    resetBall();
+                }
+            }
+
+            if (ballX >= canvas.width) {
+                if (ballY > player2Y && ballY < player2Y + paddleHeight) {
+                    ballSpeedX = -ballSpeedX;
+                } else {
+                    player1Score++;
+                    resetBall();
+                }
+            }
+
+            if (player1Up && player1Y > 0) {
+                player1Y -= paddleSpeed;
+            }
+            if (player1Down && player1Y < canvas.height - paddleHeight) {
+                player1Y += paddleSpeed;
+            }
+            if (player2Up && player2Y > 0) {
+                player2Y -= paddleSpeed;
+            }
+            if (player2Down && player2Y < canvas.height - paddleHeight) {
+                player2Y += paddleSpeed;
+            }
+        }
+
         document.addEventListener('keydown', (event) => {
             switch (event.key) {
                 case 'w':
-                    if (player === 'player1') socket.send(JSON.stringify({'action': 'move_paddle', 'player': 'player1', 'direction': 'up'}));
+                    player1Up = true;
                     break;
                 case 's':
-                    if (player === 'player1') socket.send(JSON.stringify({'action': 'move_paddle', 'player': 'player1', 'direction': 'down'}));
+                    player1Down = true;
                     break;
                 case 'ArrowUp':
-                    if (player === 'player2') socket.send(JSON.stringify({'action': 'move_paddle', 'player': 'player2', 'direction': 'up'}));
+                    player2Up = true;
                     break;
                 case 'ArrowDown':
-                    if (player === 'player2') socket.send(JSON.stringify({'action': 'move_paddle', 'player': 'player2', 'direction': 'down'}));
+                    player2Down = true;
+                    break;
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            switch (event.key) {
+                case 'w':
+                    player1Up = false;
+                    break;
+                case 's':
+                    player1Down = false;
+                    break;
+                case 'ArrowUp':
+                    player2Up = false;
+                    break;
+                case 'ArrowDown':
+                    player2Down = false;
                     break;
             }
         });
@@ -123,6 +209,8 @@
         });
 
         function gameLoop() {
+            moveEverything();
+            drawEverything();
             requestAnimationFrame(gameLoop);
         }
 
