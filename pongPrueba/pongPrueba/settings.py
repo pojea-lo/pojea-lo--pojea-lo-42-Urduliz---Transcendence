@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'daphne',
     'game',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -70,6 +71,13 @@ TEMPLATES = [
 ]
 
 ASGI_APPLICATION = "pongPrueba.asgi.application"
+
+# Configuración de canales
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 WSGI_APPLICATION = 'pongPrueba.wsgi.application'
 

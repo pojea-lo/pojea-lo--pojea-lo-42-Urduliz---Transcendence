@@ -8,12 +8,52 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     let ballX = canvas.width / 2;
     let ballY = canvas.height / 2;
-    let ballSpeedX = 6, ballSpeedY = 5;
+    let ballSpeedX = 5, ballSpeedY = 4;
     let player1Y = (canvas.height - paddleHeight) / 2;
     let player2Y = (canvas.height - paddleHeight) / 2;
 
     let player1Up = false, player1Down = false;
     let player2Up = false, player2Down = false;
+
+    let player1Score = 0, player2Score = 0;
+    const winningScore = 5;
+    let showingWinScreen = false;
+
+//socket**********************************************************************
+
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/game/');
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        ballX = data.ballX;
+        ballY = data.ballY;
+        player1Y = data.player1Y;
+        player2Y = data.player2Y;
+        player1Score = data.player1Score;
+        player2Score = data.player2Score;
+    };
+
+    socket.onopen = function(e) {
+        console.log('WebSocket connection established.');
+    };
+
+    socket.onclose = function(e) {
+        console.log('WebSocket connection closed.');
+    };
+
+    function sendGameState() {
+        socket.send(JSON.stringify({
+            'message': 'update',
+            'ballX': ballX,
+            'ballY': ballY,
+            'player1Y': player1Y,
+            'player2Y': player2Y,
+            'player1Score': player1Score,
+            'player2Score': player2Score
+        }));
+    }
+
+//socket**********************************************************************
 
     function drawRect(x, y, width, height, color) {
         context.fillStyle = color;
@@ -34,13 +74,40 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
+    function drawScore() {
+        context.fillStyle = 'white';
+        context.font = '300px Arial';
+        context.textAlign = 'center';
+        context.fillText(player1Score, canvas.width / 4, canvas.height / 2 + 100);
+        context.fillText(player2Score, 3 * canvas.width / 4, canvas.height / 2 + 100);
+    }
+
+    function drawWinScreen() {
+        context.fillStyle = 'white';
+        context.font = '30px Arial';
+        context.textAlign = 'center';
+        if (player1Score >= winningScore) {
+            context.fillText("Player 1 Wins!", canvas.width / 2, canvas.height / 2);
+        } else if (player2Score >= winningScore) {
+            context.fillText("Player 2 Wins!", canvas.width / 2, canvas.height / 2);
+        }
+        context.fillText("Click to Restart", canvas.width / 2, canvas.height / 2 + 50);
+    }
+
     function resetBall() {
+        if (player1Score >= winningScore || player2Score >= winningScore) {
+            showingWinScreen = true;
+        }
         ballX = canvas.width / 2;
         ballY = canvas.height / 2;
         ballSpeedX = -ballSpeedX;
     }
 
     function moveEverything() {
+        if (showingWinScreen) {
+            return;
+        }
+
         ballX += ballSpeedX;
         ballY += ballSpeedY;
 
@@ -52,6 +119,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             if (ballY > player1Y && ballY < player1Y + paddleHeight) {
                 ballSpeedX = -ballSpeedX;
             } else {
+                player2Score++;
                 resetBall();
             }
         }
@@ -60,6 +128,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             if (ballY > player2Y && ballY < player2Y + paddleHeight) {
                 ballSpeedX = -ballSpeedX;
             } else {
+                player1Score++;
                 resetBall();
             }
         }
@@ -84,6 +153,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
         drawRect(0, player1Y, paddleWidth, paddleHeight, 'white');
         drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, 'white');
         drawCircle(ballX, ballY, ballSize, 'white');
+        
+        if (!showingWinScreen) {
+            drawScore();
+        } else {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawWinScreen();
+        }
     }
 
     document.addEventListener('keydown', (event) => {
@@ -117,6 +193,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
             case 'ArrowDown':
                 player2Down = false;
                 break;
+        }
+    });
+
+    canvas.addEventListener('click', (event) => {
+        if (showingWinScreen) {
+            player1Score = 0;
+            player2Score = 0;
+            showingWinScreen = false;
         }
     });
 
