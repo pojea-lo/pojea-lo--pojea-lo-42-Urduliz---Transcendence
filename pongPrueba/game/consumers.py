@@ -21,6 +21,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                 elif data['direction'] == 'down':
                     self.player1Up = False
                     self.player1Down = True
+                elif data['direction'] == 'stop':
+                    self.player1Up = False
+                    self.player1Down = False
             elif data['player'] == 2:
                 if data['direction'] == 'up':
                     self.player2Up = True
@@ -28,7 +31,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                 elif data['direction'] == 'down':
                     self.player2Up = False
                     self.player2Down = True
-        
+                elif data['direction'] == 'stop':
+                    self.player2Up = False
+                    self.player2Down = False
+
     async def game_loop(self):
         try:
             while True:
