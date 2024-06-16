@@ -32,10 +32,13 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: white;
-            font-size: 36px;
+            font-size: 30px;
+            font-family: Arial, sans-serif;
             background-color: rgba(0, 0, 0, 0.8);
             padding: 20px;
             border-radius: 10px;
+            width: 80%; /* Puedes ajustar este valor según sea necesario */
+            max-width: 600px; /* Puedes ajustar este valor según sea necesario */
         }
     </style>
 </head>
@@ -43,7 +46,7 @@
     <canvas id="pongCanvas" width="800" height="400"></canvas>
     <div class="scoreboard score-left" id="scoreLeft">0</div>
     <div class="scoreboard score-right" id="scoreRight">0</div>
-    <div id="gameEndMessage" class="game-end-message"></div>
+    <div class="game-end-message" id="gameEndMessage"></div>
 
     <script>
         const canvas = document.getElementById('pongCanvas');
@@ -51,37 +54,52 @@
         const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
 
         let socket = new WebSocket('ws://' + window.location.host + '/ws/game/');
+        let gameInProgress = true;
 
         socket.onmessage = function(event) {
             let data = JSON.parse(event.data);
             if (data.type === 'game_end') {
                 document.getElementById('gameEndMessage').innerHTML = data.message;
-                // Detener el juego hasta que se haga clic en la pantalla
-                canvas.addEventListener('click', resumeGame);
+                gameInProgress = false;
+                console.log('Clic en el lienzo');
             } else {
                 drawEverything(data);  // Manejar actualizaciones normales del juego
             }
         };
 
+        // Event listener para cualquier tecla presionada en el documento
+        document.addEventListener('click', function(event) {
+            if (!gameInProgress) {
+                socket.send(JSON.stringify({ type: 'restart' }));
+                document.getElementById('gameEndMessage').innerHTML = '';
+                gameInProgress = true;
+            }
+        });
+
         function resumeGame() {
-            socket.send(JSON.stringify({ type: 'resume_game' }));
+            socket.send(JSON.stringify({ type: 'restart' }));
+            document.getElementById('gameEndMessage').innerHTML = '';
+            gameInProgress = true;
             canvas.removeEventListener('click', resumeGame);
         }
+    
         document.addEventListener('keydown', (event) => {
             let message = null;
-            switch (event.key) {
-                case 'w':
-                    message = {'type': 'move', 'player': 1, 'direction': 'up'};
-                    break;
-                case 's':
-                    message = {'type': 'move', 'player': 1, 'direction': 'down'};
-                    break;
-                case 'ArrowUp':
-                    message = {'type': 'move', 'player': 2, 'direction': 'up'};
-                    break;
-                case 'ArrowDown':
-                    message = {'type': 'move', 'player': 2, 'direction': 'down'};
-                    break;
+            if (gameInProgress) {
+                switch (event.key) {
+                    case 'w':
+                        message = {'type': 'move', 'player': 1, 'direction': 'up'};
+                        break;
+                    case 's':
+                        message = {'type': 'move', 'player': 1, 'direction': 'down'};
+                        break;
+                    case 'ArrowUp':
+                        message = {'type': 'move', 'player': 2, 'direction': 'up'};
+                        break;
+                    case 'ArrowDown':
+                        message = {'type': 'move', 'player': 2, 'direction': 'down'};
+                        break;
+                }
             }
             if (message) {
                 socket.send(JSON.stringify(message));
@@ -90,15 +108,17 @@
 
         document.addEventListener('keyup', (event) => {
             let message = null;
-            switch (event.key) {
-                case 'w':
-                case 's':
-                    message = {'type': 'move', 'player': 1, 'direction': 'stop'};
-                    break;
-                case 'ArrowUp':
-                case 'ArrowDown':
-                    message = {'type': 'move', 'player': 2, 'direction': 'stop'};
-                    break;
+            if (gameInProgress) {
+                switch (event.key) {
+                    case 'w':
+                    case 's':
+                        message = {'type': 'move', 'player': 1, 'direction': 'stop'};
+                        break;
+                    case 'ArrowUp':
+                    case 'ArrowDown':
+                        message = {'type': 'move', 'player': 2, 'direction': 'stop'};
+                        break;
+                }
             }
             if (message) {
                 socket.send(JSON.stringify(message));
