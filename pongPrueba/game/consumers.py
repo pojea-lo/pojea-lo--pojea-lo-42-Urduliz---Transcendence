@@ -3,6 +3,26 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 class GameConsumer(AsyncWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.paddleWidth = 10
+        self.paddleHeight = 100
+        self.ballSize = 10
+        self.paddleSpeed = 10
+        self.scoreLeft = 0
+        self.scoreRight = 0
+        self.reset_ball()
+
+        self.player1Y = (400 - self.paddleHeight) / 2
+        self.player2Y = (400 - self.paddleHeight) / 2
+
+        self.player1Up = False
+        self.player1Down = False
+        self.player2Up = False
+        self.player2Down = False
+        self.game_in_progress = True  # Bandera para controlar si el juego está en curso
+
     async def connect(self):
         await self.accept()
         await self.send_game_state()
@@ -37,30 +57,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def game_loop(self):
         try:
-            while True:
+            while self.game_in_progress:
                 self.move_everything()
                 await self.send_game_state()
                 await asyncio.sleep(0.03)  # 30 ms delay for ~33 FPS
         except asyncio.CancelledError:
             pass
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.paddleWidth = 10
-        self.paddleHeight = 100
-        self.ballSize = 10
-        self.paddleSpeed = 10
-        self.scoreLeft = 0
-        self.scoreRight = 0
-        self.reset_ball()
-
-        self.player1Y = (400 - self.paddleHeight) / 2
-        self.player2Y = (400 - self.paddleHeight) / 2
-
-        self.player1Up = False
-        self.player1Down = False
-        self.player2Up = False
-        self.player2Down = False
 
     def reset_ball(self):
         self.ballX = 400
@@ -82,15 +84,23 @@ class GameConsumer(AsyncWebsocketConsumer):
             if self.ballY > self.player1Y and self.ballY < self.player1Y + self.paddleHeight:
                 self.ballSpeedX = -self.ballSpeedX
             else:
-                self.scoreLeft += 1
-                self.reset_ball()
+                self.scoreRight += 1
+                if self.scoreRight >= 1:
+                    asyncio.create_task(self.handle_game_end("Jugador Derecho"))
+                    # return  # Salir de la función si el juego ha terminado
+                else:
+                    self.reset_ball()
 
         if self.ballX >= 800:
             if self.ballY > self.player2Y and self.ballY < self.player2Y + self.paddleHeight:
                 self.ballSpeedX = -self.ballSpeedX
             else:
-                self.scoreRight += 1
-                self.reset_ball()
+                self.scoreLeft += 1
+                if self.scoreLeft >= 1:
+                    asyncio.create_task(self.handle_game_end("Jugador Izquierdo"))
+                    return  # Salir de la función si el juego ha terminado
+                else:
+                    self.reset_ball()
 
         if self.player1Up and self.player1Y > 0:
             self.player1Y -= self.paddleSpeed
@@ -101,6 +111,13 @@ class GameConsumer(AsyncWebsocketConsumer):
         if self.player2Down and self.player2Y < 400 - self.paddleHeight:
             self.player2Y += self.paddleSpeed
 
+    async def handle_game_end(self, winner):
+        self.game_in_progress = False  # Detener el juego
+        message = f'<div class="game-end-message">{winner} ha ganado el juego!</div>'
+        await self.send(text_data=json.dumps({'type': 'game_end', 'message': message}))
+        await self.send_game_state()  # Asegúrate de enviar el estado final antes de enviar el mensaje de ganador
+        # Puedes agregar lógica adicional aquí para manejar el final del juego, como reiniciar el marcador, etc.
+ 
     async def send_game_state(self):
         game_state = {
             'player1Y': self.player1Y,

@@ -17,13 +17,25 @@
             font-size: 300px;
             font-family: Arial, sans-serif;
         }
-        .score-left {
+        .score-right {
             position: absolute;
             left: 200px;
         }
-        .score-right {
+        .score-left {
             position: absolute;
             right: 200px;
+        }
+        .game-end-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            font-size: 36px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -31,6 +43,8 @@
     <canvas id="pongCanvas" width="800" height="400"></canvas>
     <div class="scoreboard score-left" id="scoreLeft">0</div>
     <div class="scoreboard score-right" id="scoreRight">0</div>
+    <div id="gameEndMessage" class="game-end-message"></div>
+
     <script>
         const canvas = document.getElementById('pongCanvas');
         const context = canvas.getContext('2d');
@@ -40,9 +54,19 @@
 
         socket.onmessage = function(event) {
             let data = JSON.parse(event.data);
-            drawEverything(data);
+            if (data.type === 'game_end') {
+                document.getElementById('gameEndMessage').innerHTML = data.message;
+                // Detener el juego hasta que se haga clic en la pantalla
+                canvas.addEventListener('click', resumeGame);
+            } else {
+                drawEverything(data);  // Manejar actualizaciones normales del juego
+            }
         };
 
+        function resumeGame() {
+            socket.send(JSON.stringify({ type: 'resume_game' }));
+            canvas.removeEventListener('click', resumeGame);
+        }
         document.addEventListener('keydown', (event) => {
             let message = null;
             switch (event.key) {
