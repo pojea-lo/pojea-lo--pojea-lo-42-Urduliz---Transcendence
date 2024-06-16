@@ -50,10 +50,12 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.paddleHeight = 100
         self.ballSize = 10
         self.paddleSpeed = 10
+        self.scoreLeft = 0
+        self.scoreRight = 0
         self.reset_ball()
 
-        self.player1Y = (600 - self.paddleHeight) / 2
-        self.player2Y = (600 - self.paddleHeight) / 2
+        self.player1Y = (400 - self.paddleHeight) / 2
+        self.player2Y = (400 - self.paddleHeight) / 2
 
         self.player1Up = False
         self.player1Down = False
@@ -77,12 +79,14 @@ class GameConsumer(AsyncWebsocketConsumer):
             if self.ballY > self.player1Y and self.ballY < self.player1Y + self.paddleHeight:
                 self.ballSpeedX = -self.ballSpeedX
             else:
+                self.scoreLeft += 1
                 self.reset_ball()
 
         if self.ballX >= 800:
             if self.ballY > self.player2Y and self.ballY < self.player2Y + self.paddleHeight:
                 self.ballSpeedX = -self.ballSpeedX
             else:
+                self.scoreRight += 1
                 self.reset_ball()
 
         if self.player1Up and self.player1Y > 0:
@@ -99,6 +103,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             'player1Y': self.player1Y,
             'player2Y': self.player2Y,
             'ballX': self.ballX,
-            'ballY': self.ballY
+            'ballY': self.ballY,
+            'scoreLeft': self.scoreLeft,
+            'scoreRight': self.scoreRight,
         }
         await self.send(text_data=json.dumps(game_state))

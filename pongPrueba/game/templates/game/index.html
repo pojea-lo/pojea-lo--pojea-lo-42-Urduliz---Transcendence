@@ -8,10 +8,28 @@
             display: block;
             margin: auto;
         }
+        .scoreboard {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 24px;
+        }
+        .score-left {
+            position: absolute;
+            left: 10px;
+        }
+        .score-right {
+            position: absolute;
+            right: 10px;
+        }
     </style>
 </head>
 <body>
     <canvas id="pongCanvas" width="800" height="400"></canvas>
+    <div class="scoreboard score-left" id="scoreLeft">0</div>
+    <div class="scoreboard score-right" id="scoreRight">0</div>
     <script>
         const canvas = document.getElementById('pongCanvas');
         const context = canvas.getContext('2d');
@@ -88,6 +106,8 @@
             drawRect(0, gameState.player1Y, paddleWidth, paddleHeight, 'white');
             drawRect(canvas.width - paddleWidth, gameState.player2Y, paddleWidth, paddleHeight, 'white');
             drawCircle(gameState.ballX, gameState.ballY, ballSize, 'white');
+            document.getElementById('scoreLeft').innerText = gameState.scoreLeft;
+            document.getElementById('scoreRight').innerText = gameState.scoreRight;
         }
     </script>
 </body>
