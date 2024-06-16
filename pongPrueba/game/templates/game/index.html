@@ -75,13 +75,6 @@
             }
         });
 
-        function resumeGame() {
-            socket.send(JSON.stringify({ type: 'restart' }));
-            document.getElementById('gameEndMessage').innerHTML = '';
-            gameInProgress = true;
-            canvas.removeEventListener('click', resumeGame);
-        }
-    
         document.addEventListener('keydown', (event) => {
             let message = null;
             if (gameInProgress) {
