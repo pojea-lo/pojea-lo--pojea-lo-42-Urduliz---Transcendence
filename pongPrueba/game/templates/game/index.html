@@ -61,7 +61,6 @@
             if (data.type === 'game_end') {
                 document.getElementById('gameEndMessage').innerHTML = data.message;
                 gameInProgress = false;
-                console.log('Clic en el lienzo');
             } else {
                 drawEverything(data);  // Manejar actualizaciones normales del juego
             }
