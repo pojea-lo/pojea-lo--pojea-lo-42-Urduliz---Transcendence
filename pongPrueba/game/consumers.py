@@ -65,7 +65,10 @@ class GameConsumer(AsyncWebsocketConsumer):
     def reset_ball(self):
         self.ballX = 400
         self.ballY = 300
-        self.ballSpeedX = 6
+        if self.scoreRight > self.scoreLeft:
+            self.ballSpeedX = -6  # Si el jugador derecho tiene más puntos, saca hacia la izquierda
+        else:
+            self.ballSpeedX = 6  # Si el jugador izquierdo tiene más puntos o igual, saca hacia la derecha
         self.ballSpeedY = 5
 
     def move_everything(self):
