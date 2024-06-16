@@ -45,6 +45,23 @@
             }
         });
 
+        document.addEventListener('keyup', (event) => {
+            let message = null;
+            switch (event.key) {
+                case 'w':
+                case 's':
+                    message = {'type': 'move', 'player': 1, 'direction': 'stop'};
+                    break;
+                case 'ArrowUp':
+                case 'ArrowDown':
+                    message = {'type': 'move', 'player': 2, 'direction': 'stop'};
+                    break;
+            }
+            if (message) {
+                socket.send(JSON.stringify(message));
+            }
+        });
+
         function drawRect(x, y, width, height, color) {
             context.fillStyle = color;
             context.fillRect(x, y, width, height);
